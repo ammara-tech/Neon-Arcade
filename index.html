@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Neon Arcade</title>
+<meta name="description" content="A retro arcade with 10 games, tickets, prizes, high scores and a daily challenge.">
+<meta name="theme-color" content="#100c1c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Neon Arcade">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Bungee&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="games.css">
+</head>
+<body class="carpet-classic trim-standard">
+
+<!-- ================= HUD ================= -->
+<header class="hud">
+  <div class="brand"><span class="brand-neon">NEON</span><span class="brand-rest"> ARCADE</span></div>
+  <div class="hud-stats">
+    <div class="readout">
+      <span class="readout-label">Tickets</span>
+      <span class="readout-value readout-tickets"><span id="hudTickets">0</span> 🎟</span>
+    </div>
+    <div class="readout">
+      <span class="readout-label">Score</span>
+      <span class="readout-value" id="hudScore">0</span>
+    </div>
+    <div class="readout rank">
+      <span class="readout-label">Rank</span>
+      <span class="readout-value readout-rank" id="hudRank">Rookie</span>
+      <span class="readout-title" id="hudTitle" hidden></span>
+    </div>
+    <div class="hud-btns">
+      <button class="hud-btn" id="prizeBtn" aria-haspopup="dialog"><span aria-hidden="true">🎁</span><span class="hud-btn-label">Prizes</span></button>
+      <button class="hud-btn" id="achBtn" aria-haspopup="dialog"><span aria-hidden="true">🏆</span><span><span id="achCount">0</span>/<span id="achTotal">0</span></span></button>
+      <button class="hud-btn icon" id="soundBtn" aria-label="Mute sound">🔊</button>
+    </div>
+  </div>
+</header>
+
+<!-- ================= FLOOR (cabinet select) ================= -->
+<main class="view floor active" id="floorScreen">
+  <div class="daily" id="dailyBanner">
+    <span class="daily-tag">Daily challenge</span>
+    <span class="daily-text" id="dailyText"></span>
+    <span class="daily-reward" id="dailyReward"></span>
+    <button class="daily-play" id="dailyPlay">Play</button>
+  </div>
+
+  <div class="carousel-wrap">
+    <button class="turn-btn" id="turnLeft" aria-label="Previous machine">‹</button>
+    <div class="carousel-stage" id="carouselStage">
+      <div class="carousel" id="carousel"></div>
+    </div>
+    <button class="turn-btn" id="turnRight" aria-label="Next machine">›</button>
+  </div>
+
+  <div class="floor-footer">
+    <p class="floor-best" id="floorBest"></p>
+    <div class="diff-picker" id="diffPicker" role="group" aria-label="Difficulty">
+      <span class="diff-picker-label">Difficulty</span>
+      <button class="diff-opt" data-diff="easy" aria-pressed="false">Easy</button>
+      <button class="diff-opt" data-diff="normal" aria-pressed="true">Normal</button>
+      <button class="diff-opt" data-diff="hard" aria-pressed="false">Hard</button>
+    </div>
+    <button class="play-btn" id="playBtn">START <span id="playGameName"></span></button>
+    <p class="hint"><kbd>←</kbd> <kbd>→</kbd> browse · <kbd>Enter</kbd> play · <kbd>Esc</kbd> back</p>
+  </div>
+</main>
+
+<!-- ================= GAME SCREENS (built by js/ui.js from each game file) ================= -->
+<div id="gameScreens"></div>
+
+<!-- ================= TROPHY CASE ================= -->
+<div class="modal-backdrop" id="achModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="achTitle">
+    <div class="modal-head">
+      <h2 id="achTitle">Trophy Case</h2>
+      <button class="modal-close" data-close aria-label="Close">✕</button>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab active" role="tab" data-tab="trophies" aria-selected="true">Trophies</button>
+      <button class="tab" role="tab" data-tab="scores" aria-selected="false">Hi-scores</button>
+      <button class="tab" role="tab" data-tab="stats" aria-selected="false">Stats</button>
+      <button class="tab" role="tab" data-tab="settings" aria-selected="false">Settings</button>
+    </div>
+    <div class="tab-panel" data-panel="trophies" id="achGrid"></div>
+    <div class="tab-panel" data-panel="scores" hidden><div class="hs-grid" id="hsGrid"></div></div>
+    <div class="tab-panel stats" data-panel="stats" id="statsPanel" hidden></div>
+    <div class="tab-panel settings" data-panel="settings" hidden>
+      <div class="setting">
+        <div><b>Sound effects</b><span class="muted">Retro bleeps for hits, wins and tickets.</span></div>
+        <button class="chip-btn" id="settingsSound" aria-pressed="true">Sound: on</button>
+      </div>
+      <div class="setting">
+        <div><b>Install the app</b><span class="muted" id="installNote"></span></div>
+        <button class="chip-btn" id="installBtn" hidden>Install</button>
+      </div>
+      <div class="setting">
+        <div><b>Saved progress</b><span class="muted">Score, tickets, trophies, prizes and high scores are saved in this browser.</span></div>
+        <button class="chip-btn danger" id="resetBtn">Reset all progress</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= PRIZE COUNTER ================= -->
+<div class="modal-backdrop" id="prizeModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="prizeTitle">
+    <div class="modal-head">
+      <div>
+        <h2 id="prizeTitle">Prize Counter</h2>
+        <p class="muted">You have <b class="prize-tickets"><span id="prizeTickets">0</span> 🎟</b> to spend.</p>
+      </div>
+      <button class="modal-close" data-close aria-label="Close">✕</button>
+    </div>
+    <div id="prizeList"></div>
+  </div>
+</div>
+
+<!-- ================= HIGH-SCORE INITIALS ================= -->
+<div class="modal-backdrop" id="initialsModal" hidden>
+  <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="initialsTitle">
+    <p class="eyebrow" id="initialsGame"></p>
+    <h2 id="initialsTitle">New high score!</h2>
+    <div class="initials-score" id="initialsScore"></div>
+    <label class="initials-label" for="initialsInput">Enter your initials</label>
+    <input class="initials-input" id="initialsInput" maxlength="3" autocomplete="off" autocapitalize="characters" spellcheck="false" data-autofocus>
+    <button class="play-btn small" id="initialsSave">Save</button>
+  </div>
+</div>
+
+<!-- ================= GAUNTLET (bar + countdown, shown during a run) ================= -->
+<div class="gx-bar" id="gxBar" hidden>
+  <div class="gxb-row">
+    <span class="gxb-round"></span>
+    <span class="gxb-game"></span>
+    <span class="gxb-time"></span>
+    <span class="gxb-total-wrap">Total <b class="gxb-total">0</b></span>
+    <button class="chip-btn gxb-quit">Quit</button>
+  </div>
+  <div class="gxb-track"><i class="gxb-fill"></i></div>
+</div>
+<div class="gx-overlay" id="gxOverlay" hidden>
+  <div class="gxo-card">
+    <p class="gxo-eyebrow"></p>
+    <h2 class="gxo-title"></h2>
+    <p class="gxo-text"></p>
+    <div class="gxo-count" aria-live="assertive"></div>
+    <p class="gxo-foot"></p>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<canvas class="fx-canvas" id="fxCanvas" aria-hidden="true"></canvas>
+
+<!-- Core first, then one file per game, then the UI that builds the floor -->
+<script src="js/core.js"></script>
+<script src="js/games/ttt.js"></script>
+<script src="js/games/rps.js"></script>
+<script src="js/games/memory.js"></script>
+<script src="js/games/clicker.js"></script>
+<script src="js/games/whack.js"></script>
+<script src="js/games/hangman.js"></script>
+<script src="js/games/typing.js"></script>
+<script src="js/games/snake.js"></script>
+<script src="js/games/runner.js"></script>
+<script src="js/games/breakout.js"></script>
+<script src="js/gauntlet.js"></script>
+<script src="js/stats.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
